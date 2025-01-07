@@ -1,2 +1,3 @@
-#Ignores enviroment variables
+#Enviroment Variables
 .env
+
