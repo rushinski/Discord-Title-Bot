@@ -1,25 +1,24 @@
 module.exports = {
   name: 'interactionCreate',
-  async execute(interaction, client) {
-    if (interaction.isCommand()) {
-      const command = client.commands.get(interaction.commandName);
-      if (!command) {
-        return interaction.reply({
-          content: 'Command not found.',
-          ephemeral: true,
-        });
-      }
+  async execute(interaction) {
+    if (!interaction.isCommand()) return;
 
-      try {
-        await command.execute(interaction, client);
-      } catch (error) {
-        console.error(`Error executing command ${interaction.commandName}:`, error);
-        await interaction.reply({
-          content: 'There was an error while executing this command!',
-          ephemeral: true,
-        });
+    const command = interaction.client.commands.get(interaction.commandName);
+
+    if (!command) {
+      console.error(`No command matching ${interaction.commandName} was found.`);
+      return;
+    }
+
+    try {
+      await command.execute(interaction);
+    } catch (error) {
+      console.error(`Error executing command ${interaction.commandName}:`, error);
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply({ content: 'There was an error while executing this command!' });
+      } else {
+        await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
       }
     }
-    // Handle other interaction types (e.g., buttons, modals) if needed
   },
 };
