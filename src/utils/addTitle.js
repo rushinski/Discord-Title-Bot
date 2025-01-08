@@ -3,20 +3,28 @@ const { setTimeout } = require('timers/promises');
 const Location = require('../models/Location');
 
 const ELEMENT_POSITIONS = {
-  COORDINATES_SEARCH_BUTTON: "536 9",
-  KINGDOM_ID_INPUT: "567.5 179",
-  INPUT_OK_BUTTON: "1460.5 814.5",
-  X_COORDINATE_INPUT: "798.5 179",
-  Y_COORDINATE_INPUT: "991.5 179",
-  COORDINATES_OVERLAY_SEARCH_BUTTON: "1102 179",
+  COORDINATES_SEARCH_BUTTON: "659 27",
+  KINGDOM_ID_INPUT: "668 2110",
+  INPUT_OK_BUTTON: "1839 1029",
+  X_COORDINATE_INPUT: "948 215",
+  Y_COORDINATE_INPUT: "1181 215",
+  COORDINATES_OVERLAY_SEARCH_BUTTON: "1332 215",
 };
 
 const MAP_ANIMATION_DURATION = 500;
 const UI_ELEMENT_ANIMATION_DURATION = 750;
 
-async function addTitle({ device, logger, kingdom, xCoord, yCoord }) {
+async function addTitle({ device, logger, kingdom, x, y, title }) {
   try {
     logger.info("Starting title assignment...");
+
+    // Validate inputs
+    if (x === undefined || y === undefined) {
+      throw new Error(`Coordinates are undefined. Received: x=${x}, y=${y}`);
+    }
+
+    logger.info(`Using coordinates: x=${x}, y=${y}`);
+    logger.info(`Assigning title: ${title}`);
 
     // Open coordinates search overlay
     logger.info("Clicking coordinates search button.");
@@ -32,18 +40,18 @@ async function addTitle({ device, logger, kingdom, xCoord, yCoord }) {
     await setTimeout(UI_ELEMENT_ANIMATION_DURATION);
 
     // Enter X coordinate
-    logger.info("Entering X coordinate.");
+    logger.info(`Entering X coordinate: ${x}`);
     await device.shell(`input tap ${ELEMENT_POSITIONS.X_COORDINATE_INPUT}`);
     await device.shell('input keyevent --longpress 67');
-    await device.shell(`input text ${xCoord}`);
+    await device.shell(`input text ${x}`);
     await device.shell(`input tap ${ELEMENT_POSITIONS.INPUT_OK_BUTTON}`);
     await setTimeout(UI_ELEMENT_ANIMATION_DURATION);
 
     // Enter Y coordinate
-    logger.info("Entering Y coordinate.");
+    logger.info(`Entering Y coordinate: ${y}`);
     await device.shell(`input tap ${ELEMENT_POSITIONS.Y_COORDINATE_INPUT}`);
     await device.shell('input keyevent --longpress 67');
-    await device.shell(`input text ${yCoord}`);
+    await device.shell(`input text ${y}`);
     await device.shell(`input tap ${ELEMENT_POSITIONS.INPUT_OK_BUTTON}`);
     await setTimeout(UI_ELEMENT_ANIMATION_DURATION);
 
@@ -58,6 +66,5 @@ async function addTitle({ device, logger, kingdom, xCoord, yCoord }) {
     throw error;
   }
 }
-
 
 module.exports = { addTitle };

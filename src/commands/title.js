@@ -49,34 +49,47 @@ module.exports = {
     await interaction.deferReply({ ephemeral: true });
 
     try {
+      // Log inputs for debugging
+      console.log(`Fetching location for userId: ${userId}, type: ${type}, tier: ${tier}`);
+    
       // Fetch location data from MongoDB
       const userLocation = await LocationModel.findOne({ userId, type });
-
-      if (!userLocation || userLocation.tier !== tier) {
+    
+      // Log the result from MongoDB
+      console.log(`MongoDB result for location:`, userLocation);
+    
+      if (!userLocation) {
         return interaction.editReply({
-          content: '❌ You must set a valid location with `/set-location` before assigning a title.',
+          content: '❌ No location found. Please set a location with `/set-location`.',
         });
       }
-
+    
+      if (userLocation.tier !== tier) {
+        return interaction.editReply({
+          content: '❌ The location tier does not match the specified tier. Please set a valid location with `/set-location`.',
+        });
+      }
+    
       const { x, y } = userLocation;
-
+      console.log(`Fetched coordinates: x=${x}, y=${y}`);
+    
       // Prepare the addTitle function call
       const kingdom = tier === 'hk' ? process.env.HOME_KD : 'Lost Kingdom';
       const device = { 
-        shell: async (command) => console.log(`ADB Command: ${command}`), 
-        // Replace this mock with your actual ADB connection logic
+        shell: async (command) => console.log(`ADB Command: ${command}`),
       };
-
+    
       // Execute title assignment
+      console.log(`Calling addTitle with coordinates x=${x}, y=${y}`);
       await addTitle({
         device,
-        title,
         logger: console,
         kingdom,
         x,
         y,
-      });
-
+        title, // Add title here explicitly
+      });      
+    
       await interaction.editReply({
         content: `✅ Successfully assigned the **${title}** title for **${type}** in **${tier.toUpperCase()}**!`,
       });
@@ -85,6 +98,6 @@ module.exports = {
       await interaction.editReply({
         content: '❌ An error occurred while assigning the title. Please try again.',
       });
-    }
+    }    
   },
 };
