@@ -35,7 +35,7 @@ module.exports = {
 
       console.log('Screenshot captured:', screenshotPath);
 
-      const cropRegion = { left: 10, top: 900, width: 165, height: 165 };
+      const cropRegion = { left: 47, top: 938, width: 86, height: 88 };
       try {
         await sharp(screenshotPath).extract(cropRegion).toFile(croppedImagePath);
         console.log('Cropped image saved at:', croppedImagePath);
@@ -102,7 +102,7 @@ module.exports = {
             }
       
             console.log('ADB action performed for event1.');
-            setTimeout(captureFullScreenshot, 1000); // Wait for 1 second before taking the next action
+            setTimeout(captureFullScreenshot, 1100); 
           });
         } else if (event === 'event2') {
           exec('adb shell input tap 92 980', (adbError1) => {
@@ -120,9 +120,9 @@ module.exports = {
                 }
       
                 console.log('Second click of event2 completed.');
-                setTimeout(captureFullScreenshot, 2000); // Wait for 2 seconds before taking the next action
+                setTimeout(captureFullScreenshot, 1100); // Wait for 2 seconds before taking the next action
               });
-            }, 1000); // Wait for 1 second between the two clicks
+            }, 500); // Wait for 1 second between the two clicks
           });
         }
       }
