@@ -35,17 +35,20 @@ client.login(BOT_TOKEN).catch(err => {
   console.error('Discord bot login error:', err);
 });
 
-// ADB connection check
-const adbClient = adb.createClient();
+// ADB setup
+const adbClient = adb.createClient(); // Initialize ADB client globally
+client.adbClient = adbClient; // Attach adbClient to the client object
 
 adbClient.listDevices()
-.then(devices => {
-  if (devices.length > 0) {
-    console.log('ADB Devices connected:', devices.map(d => d.id));
-  } else {
-    console.log('No ADB devices connected.');
-  }
-})
-.catch(err => {
-  console.error('ADB connection error:', err);
-});
+  .then(devices => {
+    if (devices.length > 0) {
+      console.log('ADB Devices connected:', devices.map(d => d.id));
+    } else {
+      console.log('No ADB devices connected.');
+    }
+  })
+  .catch(err => {
+    console.error('ADB connection error:', err);
+  });
+
+module.exports = client;

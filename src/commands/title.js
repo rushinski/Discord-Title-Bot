@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const LocationModel = require('../models/Location');
 const { addTitle } = require('../utils/addTitle');
+const client = require('../index'); // Import the client from your index.js
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -40,64 +41,70 @@ module.exports = {
         ),
     ),
   async execute(interaction) {
-    const type = interaction.options.getString('type');
-    const tier = interaction.options.getString('tier');
-    const title = interaction.options.getString('title');
-    const userId = interaction.user.id;
-
-    // Defer the reply to allow time for processing
-    await interaction.deferReply({ ephemeral: true });
+    const adbClient = client.adbClient; // Retrieve adbClient from the client object
+    if (!adbClient) {
+      console.error('ADB Client is not initialized.');
+      return interaction.reply('❌ ADB Client is not available. Please contact the bot administrator.');
+    }
 
     try {
-      // Log inputs for debugging
-      console.log(`Fetching location for userId: ${userId}, type: ${type}, tier: ${tier}`);
-    
-      // Fetch location data from MongoDB
+      // Retrieve options from the command
+      const type = interaction.options.getString('type');
+      const tier = interaction.options.getString('tier');
+      const title = interaction.options.getString('title');
+      const userId = interaction.user.id;
+
+      // Defer reply to handle delays
+      await interaction.deferReply({ ephemeral: true });
+
+      // Fetch user location from MongoDB
       const userLocation = await LocationModel.findOne({ userId, type });
-    
-      // Log the result from MongoDB
-      console.log(`MongoDB result for location:`, userLocation);
-    
       if (!userLocation) {
         return interaction.editReply({
           content: '❌ No location found. Please set a location with `/set-location`.',
         });
       }
-    
+
       if (userLocation.tier !== tier) {
         return interaction.editReply({
           content: '❌ The location tier does not match the specified tier. Please set a valid location with `/set-location`.',
         });
       }
-    
+
       const { x, y } = userLocation;
-      console.log(`Fetched coordinates: x=${x}, y=${y}`);
-    
-      // Prepare the addTitle function call
+
+      // Validate connected ADB devices
+      const devices = await adbClient.listDevices();
+      if (!devices || devices.length === 0) {
+        return interaction.editReply({
+          content: '❌ No ADB devices connected. Please connect a device.',
+        });
+      }
+
+      // Get the device ID (assuming the first device in the list)
+      const deviceId = devices[0].id;
+      console.log(`Using device: ${deviceId}`);
+
+      // Prepare and execute title assignment
       const kingdom = tier === 'hk' ? process.env.HOME_KD : 'Lost Kingdom';
-      const device = { 
-        shell: async (command) => console.log(`ADB Command: ${command}`),
-      };
-    
-      // Execute title assignment
-      console.log(`Calling addTitle with coordinates x=${x}, y=${y}`);
       await addTitle({
-        device,
+        adbClient,
         logger: console,
         kingdom,
         x,
         y,
-        title, // Add title here explicitly
-      });      
-    
+        title,
+        deviceId,
+      });
+
       await interaction.editReply({
         content: `✅ Successfully assigned the **${title}** title for **${type}** in **${tier.toUpperCase()}**!`,
       });
     } catch (error) {
       console.error('Error assigning title:', error);
       await interaction.editReply({
-        content: '❌ An error occurred while assigning the title. Please try again.',
+        content: `❌ An error occurred while assigning the title: ${error.message}`,
       });
-    }    
+    }
   },
 };
