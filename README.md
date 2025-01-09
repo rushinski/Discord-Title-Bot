@@ -1,3 +1,3 @@
-npm i dotenv mongodb mongoose discord.js adbkit adb-ts tesseract.js
+npm i dotenv mongodb mongoose discord.js adbkit tesseract.js sharp pixelmatch pngjs
 install all of these
 
