@@ -122,7 +122,7 @@ module.exports = {
                 console.log('Second click of event2 completed.');
                 setTimeout(captureFullScreenshot, 1100); // Wait for 2 seconds before taking the next action
               });
-            }, 500); // Wait for 1 second between the two clicks
+            }, 6000);
           });
         }
       }
@@ -142,7 +142,7 @@ module.exports = {
             console.log('Full screenshot captured at:', fullScreenshotPath);
       
             await sharp(fullScreenshotPath)
-              .extract({ left: 402, top: 11, width: 233, height: 42 })
+              .extract({ left: 571, top: 11, width: 233, height: 42 })
               .toFile(croppedCoordinatesPath);
             console.log('Coordinates cropped image saved at:', croppedCoordinatesPath);
       
