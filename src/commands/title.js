@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 const LocationModel = require('../models/Location');
 const LastVisitedModel = require('../models/LastVisited');
 const { addTitle } = require('../utils/addTitle');
@@ -52,11 +52,10 @@ module.exports = {
       const type = interaction.options.getString('type');
       const tier = interaction.options.getString('tier');
       const title = interaction.options.getString('title');
-      const userId = interaction.user.id;
 
       await interaction.deferReply({ ephemeral: true });
 
-      const userLocation = await LocationModel.findOne({ userId, type });
+      const userLocation = await LocationModel.findOne({ userId: interaction.user.id, type });
       if (!userLocation) {
         return interaction.editReply({
           content: '❌ No location found. Please set a location with `/set-location`.',
@@ -70,15 +69,7 @@ module.exports = {
       }
 
       const { x, y } = userLocation;
-
       const kingdom = tier === 'hk' ? process.env.HOME_KD : process.env.LOST_KD;
-
-      // Update last visited kingdom
-      await LastVisitedModel.updateOne(
-        { userId },
-        { $set: { userId, kingdom, updatedAt: new Date() } },
-        { upsert: true }
-      );
 
       const devices = await adbClient.listDevices();
       if (!devices || devices.length === 0) {
@@ -107,7 +98,7 @@ module.exports = {
       });
 
       await interaction.editReply({
-        content: `✅ Successfully assigned the **${title}** title for **${type}** in **${tier.toUpperCase()}**! Kingdom: **${kingdom}** has been saved as your last visited.`,
+        content: `✅ Successfully assigned the **${title}** title for **${type}** in **${tier.toUpperCase()}**! Last kingdom updated globally to: **${kingdom}**.`,
       });
     } catch (error) {
       console.error('Error assigning title:', error);

@@ -17,27 +17,13 @@ const UI_DELAY = 750;
  * Add a title to a player in the specified kingdom and coordinates.
  * @param {object} params - Parameters for title assignment.
  */
-async function addTitle({ userId, adbClient, logger, kingdom, x, y, title, deviceId }) {
+async function addTitle({ adbClient, logger, kingdom, x, y, title, deviceId }) {
   if (!adbClient) {
-    throw new Error("ADB Client is undefined. Ensure it's initialized and passed to addTitle.");
+    throw new Error('ADB Client is undefined. Ensure it\'s initialized and passed to addTitle.');
   }
 
   try {
     logger.info("Starting title assignment...");
-
-    // Fetch the last visited kingdom
-    const lastVisited = await LastVisitedModel.findOne({ userId });
-    const lastKingdom = lastVisited?.kingdom || null;
-
-    // Calculate delay based on last visited kingdom
-    let delay = 8000; // Default delay
-    if (lastKingdom === process.env.HOME_KD) delay = 2000;
-    else if (lastKingdom === process.env.LOST_KD) delay = 5000;
-
-    logger.info(`Last visited kingdom: ${lastKingdom || 'none'}`);
-    logger.info(`Applying delay of ${delay}ms.`);
-    await setTimeout(delay);
-
     logger.info(`Using coordinates: x=${x}, y=${y}`);
     logger.info(`Assigning title: ${title}`);
 
@@ -81,15 +67,32 @@ async function addTitle({ userId, adbClient, logger, kingdom, x, y, title, devic
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.COORDINATES_OVERLAY_SEARCH_BUTTON}`);
     await setTimeout(UI_DELAY);
 
-    logger.info("Completed title assignment tasks successfully.");
+    // Fetch the last visited kingdom globally
+    const lastVisitedDoc = await LastVisitedModel.findOne({});
+    const lastKingdom = lastVisitedDoc?.kingdom || null;
 
-    // Update last visited kingdom
+    // Calculate delay based on the last visited kingdom
+    let delay;
+    if (lastKingdom === kingdom) {
+      delay = 2000; // Shorter delay if revisiting the same kingdom
+    } else {
+      delay = 5000; // Longer delay if switching kingdoms
+    }
+
+    logger.info(`Last visited kingdom: ${lastKingdom || 'none'}`);
+    logger.info(`Currently visiting kingdom: ${kingdom || 'none'}`);
+    logger.info(`Applying delay of ${delay}ms.`);
+    await setTimeout(delay);
+
+    logger.info('Completed title assignment tasks successfully.');
+
+    // Update the globally last visited kingdom
     await LastVisitedModel.updateOne(
-      { userId },
+      {},
       { $set: { kingdom, updatedAt: new Date() } },
       { upsert: true }
     );
-    logger.info(`Updated last visited kingdom: ${kingdom}`);
+    logger.info(`Updated global last visited kingdom to: ${kingdom}`);
   } catch (error) {
     logger.error(`Error in addTitle function: ${error.message}`);
     throw error;
