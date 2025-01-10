@@ -1,7 +1,8 @@
 const { SlashCommandBuilder } = require('discord.js');
 const LocationModel = require('../models/Location');
+const LastVisitedModel = require('../models/LastVisited');
 const { addTitle } = require('../utils/addTitle');
-const client = require('../index'); // Import the client from your index.js
+const client = require('../index');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -41,23 +42,20 @@ module.exports = {
         ),
     ),
   async execute(interaction) {
-    const adbClient = client.adbClient; // Retrieve adbClient from the client object
+    const adbClient = client.adbClient;
     if (!adbClient) {
       console.error('ADB Client is not initialized.');
       return interaction.reply('❌ ADB Client is not available. Please contact the bot administrator.');
     }
 
     try {
-      // Retrieve options from the command
       const type = interaction.options.getString('type');
       const tier = interaction.options.getString('tier');
       const title = interaction.options.getString('title');
       const userId = interaction.user.id;
 
-      // Defer reply to handle delays
       await interaction.deferReply({ ephemeral: true });
 
-      // Fetch user location from MongoDB
       const userLocation = await LocationModel.findOne({ userId, type });
       if (!userLocation) {
         return interaction.editReply({
@@ -73,7 +71,15 @@ module.exports = {
 
       const { x, y } = userLocation;
 
-      // Validate connected ADB devices
+      const kingdom = tier === 'hk' ? process.env.HOME_KD : process.env.LOST_KD;
+
+      // Update last visited kingdom
+      await LastVisitedModel.updateOne(
+        { userId },
+        { $set: { userId, kingdom, updatedAt: new Date() } },
+        { upsert: true }
+      );
+
       const devices = await adbClient.listDevices();
       if (!devices || devices.length === 0) {
         return interaction.editReply({
@@ -81,12 +87,15 @@ module.exports = {
         });
       }
 
-      // Get the device ID (assuming the first device in the list)
-      const deviceId = devices[0].id;
+      const deviceId = devices[0]?.id;
+      if (!deviceId) {
+        return interaction.editReply({
+          content: '❌ Unable to retrieve device ID. Please ensure your ADB setup is correct.',
+        });
+      }
+
       console.log(`Using device: ${deviceId}`);
 
-      // Prepare and execute title assignment
-      const kingdom = tier === 'hk' ? process.env.HOME_KD : 'Lost Kingdom';
       await addTitle({
         adbClient,
         logger: console,
@@ -98,7 +107,7 @@ module.exports = {
       });
 
       await interaction.editReply({
-        content: `✅ Successfully assigned the **${title}** title for **${type}** in **${tier.toUpperCase()}**!`,
+        content: `✅ Successfully assigned the **${title}** title for **${type}** in **${tier.toUpperCase()}**! Kingdom: **${kingdom}** has been saved as your last visited.`,
       });
     } catch (error) {
       console.error('Error assigning title:', error);
