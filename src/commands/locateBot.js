@@ -1,19 +1,31 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } = require('discord.js');
 const { exec } = require('child_process');
 const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 const Tesseract = require('tesseract.js');
 const { PNG } = require('pngjs');
+const mongoose = require('mongoose');
+require('dotenv').config();
 
 const BOT_IMAGES_DIR = path.join(__dirname, '../images/botImages/locateBotImages');
 const REFERENCE_IMAGES_DIR = path.join(__dirname, '../images/referenceImages');
+
+const LastVisited = require('../models/LastVisited'); // Assuming the model is in the `models` directory
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('locate-bot')
     .setDescription("Locate the title bot's current location"),
   async execute(interaction) {
+    // Check if the user has admin permissions
+    if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({
+        content: 'You do not have permission to use this command.',
+        ephemeral: true,
+      });
+    }
+
     await interaction.reply({ content: 'Processing... Please wait.', ephemeral: true });
 
     const pixelmatch = (await import('pixelmatch')).default;
@@ -30,7 +42,10 @@ module.exports = {
     exec(`adb exec-out screencap -p > ${screenshotPath}`, async (err) => {
       if (err) {
         console.error('Error taking screenshot:', err);
-        return interaction.followUp({ content: 'Failed to capture screenshot. Ensure ADB is configured and connected.', ephemeral: true });
+        return interaction.followUp({
+          content: 'Failed to capture screenshot. Ensure ADB is configured and connected.',
+          ephemeral: true,
+        });
       }
 
       console.log('Screenshot captured:', screenshotPath);
@@ -45,7 +60,10 @@ module.exports = {
       }
 
       if (!fs.existsSync(referenceImagePath1) || !fs.existsSync(referenceImagePath2)) {
-        return interaction.followUp({ content: 'Reference images not found. Please add the reference images to proceed.', ephemeral: true });
+        return interaction.followUp({
+          content: 'Reference images not found. Please add the reference images to proceed.',
+          ephemeral: true,
+        });
       }
 
       const croppedImg = fs.createReadStream(croppedImagePath).pipe(new PNG());
@@ -59,22 +77,13 @@ module.exports = {
       try {
         const [croppedData, referenceData1, referenceData2] = await Promise.all([
           new Promise((resolve, reject) => {
-            croppedImg.on('parsed', () => {
-              console.log('Cropped image parsed.');
-              resolve(croppedImg.data);
-            }).on('error', reject);
+            croppedImg.on('parsed', () => resolve(croppedImg.data)).on('error', reject);
           }),
           new Promise((resolve, reject) => {
-            referenceImg1.on('parsed', () => {
-              console.log('Reference image 1 parsed.');
-              resolve(referenceImg1.data);
-            }).on('error', reject);
+            referenceImg1.on('parsed', () => resolve(referenceImg1.data)).on('error', reject);
           }),
           new Promise((resolve, reject) => {
-            referenceImg2.on('parsed', () => {
-              console.log('Reference image 2 parsed.');
-              resolve(referenceImg2.data);
-            }).on('error', reject);
+            referenceImg2.on('parsed', () => resolve(referenceImg2.data)).on('error', reject);
           }),
         ]);
 
@@ -86,11 +95,17 @@ module.exports = {
           await handleEvent('event2');
         } else {
           console.error('No match found.');
-          return interaction.followUp({ content: 'Title bot could not be located.', ephemeral: true });
+          return interaction.followUp({
+            content: 'Title bot could not be located.',
+            ephemeral: true,
+          });
         }
       } catch (error) {
         console.error('Error in image comparison:', error);
-        return interaction.followUp({ content: 'An error occurred during image comparison.', ephemeral: true });
+        return interaction.followUp({
+          content: 'An error occurred during image comparison.',
+          ephemeral: true,
+        });
       }
 
       async function handleEvent(event) {
@@ -98,75 +113,90 @@ module.exports = {
           exec('adb shell input tap 92 980', async (adbError) => {
             if (adbError) {
               console.error('Error during ADB click:', adbError);
-              return interaction.followUp({ content: 'Failed to perform ADB actions.', ephemeral: true });
+              return interaction.followUp({
+                content: 'Failed to perform ADB actions.',
+                ephemeral: true,
+              });
             }
-      
+
             console.log('ADB action performed for event1.');
-            setTimeout(captureFullScreenshot, 1100); 
+            setTimeout(captureFullScreenshot, 1100);
           });
         } else if (event === 'event2') {
           exec('adb shell input tap 92 980', (adbError1) => {
             if (adbError1) {
               console.error('Error during first click of event2:', adbError1);
-              return interaction.followUp({ content: 'Failed to perform ADB actions.', ephemeral: true });
+              return interaction.followUp({
+                content: 'Failed to perform ADB actions.',
+                ephemeral: true,
+              });
             }
-      
+
             console.log('First click of event2 completed.');
             setTimeout(() => {
               exec('adb shell input tap 92 980', (adbError2) => {
                 if (adbError2) {
                   console.error('Error during second click of event2:', adbError2);
-                  return interaction.followUp({ content: 'Failed to perform ADB actions.', ephemeral: true });
+                  return interaction.followUp({
+                    content: 'Failed to perform ADB actions.',
+                    ephemeral: true,
+                  });
                 }
-      
+
                 console.log('Second click of event2 completed.');
-                setTimeout(captureFullScreenshot, 1100); // Wait for 2 seconds before taking the next action
+                setTimeout(captureFullScreenshot, 1100);
               });
             }, 6000);
           });
         }
       }
-      
-      function captureFullScreenshot() {
+
+      async function captureFullScreenshot() {
         const fullScreenshotPath = path.join(BOT_IMAGES_DIR, 'fullScreen.png');
         const croppedCoordinatesPath = path.join(BOT_IMAGES_DIR, 'coordinatesCropped.png');
-        const croppedLocationPath = path.join(BOT_IMAGES_DIR, 'botLocation.png');
-      
+
         exec(`adb exec-out screencap -p > ${fullScreenshotPath}`, async (captureErr) => {
           if (captureErr) {
             console.error('Error taking full screenshot:', captureErr);
-            return interaction.followUp({ content: 'Failed to capture full screenshot.', ephemeral: true });
+            return interaction.followUp({
+              content: 'Failed to capture full screenshot.',
+              ephemeral: true,
+            });
           }
-      
+
           try {
             console.log('Full screenshot captured at:', fullScreenshotPath);
-      
+
             await sharp(fullScreenshotPath)
-              .extract({ left: 571, top: 11, width: 233, height: 42 })
+              .extract({ left: 402, top: 11, width: 233, height: 42 })
               .toFile(croppedCoordinatesPath);
-            console.log('Coordinates cropped image saved at:', croppedCoordinatesPath);
-      
+
             const coordinatesText = await Tesseract.recognize(croppedCoordinatesPath, 'eng').then(
               ({ data: { text } }) => text.trim()
             );
-      
-            await sharp(fullScreenshotPath)
-              .extract({ left: 723, top: 339, width: 484, height: 345 })
-              .toFile(croppedLocationPath);
-            console.log('Location cropped image saved at:', croppedLocationPath);
-      
+
             const embed = new EmbedBuilder()
-              .setTitle('Title bot located')
-              .setImage(`attachment://${path.basename(croppedLocationPath)}`)
-              .setDescription(`Coordinates: ${coordinatesText}`)
-              .setColor('Blue');
-      
-            await interaction.followUp({
-              embeds: [embed],
-              files: [croppedLocationPath],
-            });
-      
+            .setTitle('Title bot located')
+            .setImage(`attachment://${path.basename(fullScreenshotPath)}`)
+            .setFooter({ text: `📍Coordinates: ${coordinatesText}` }) // Moved the coordinates to the footer
+            .setColor('Blue');
+          
+          await interaction.followUp({
+            embeds: [embed],
+            files: [fullScreenshotPath],
+          });
+
             console.log('Embed sent successfully.');
+
+            // Update the last visited kingdom
+            const homeKD = process.env.HOME_KD || 'Unknown Kingdom';
+            await LastVisited.updateOne(
+              {},
+              { kingdom: homeKD, updatedAt: new Date() },
+              { upsert: true }
+            );
+
+            console.log(`Last visited kingdom updated to: ${homeKD}`);
           } catch (processingError) {
             console.error('Error processing screenshots:', processingError);
             interaction.followUp('An error occurred while processing the screenshots.');
