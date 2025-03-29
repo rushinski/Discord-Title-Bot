@@ -43,9 +43,9 @@ async function addTitle({ adbClient, logger, kingdom, x, y, title, deviceId }) {
     logger.info("Entering kingdom ID.");
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.KINGDOM_ID_INPUT}`);
     await setTimeout(200); // Allow the input field to be focused
-    await clearTextField(adbClient, deviceId, 20); // Clear existing text
+    await clearTextField(adbClient, deviceId, 10); // Clear existing text
     await adbClient.shell(deviceId, `input text ${kingdom}`);
-    await setTimeout(600); // Wait for text entry to complete
+    await setTimeout(700); // Wait for text entry to complete
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.INPUT_OK_BUTTON}`);
     await setTimeout(UI_DELAY);
 
@@ -53,9 +53,9 @@ async function addTitle({ adbClient, logger, kingdom, x, y, title, deviceId }) {
     logger.info(`Entering X coordinate: ${x}`);
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.X_COORDINATE_INPUT}`);
     await setTimeout(200);
-    await clearTextField(adbClient, deviceId, 10);
+    await clearTextField(adbClient, deviceId, 5);
     await adbClient.shell(deviceId, `input text ${x}`);
-    await setTimeout(600);
+    await setTimeout(700);
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.INPUT_OK_BUTTON}`);
     await setTimeout(UI_DELAY);
 
@@ -63,9 +63,9 @@ async function addTitle({ adbClient, logger, kingdom, x, y, title, deviceId }) {
     logger.info(`Entering Y coordinate: ${y}`);
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.Y_COORDINATE_INPUT}`);
     await setTimeout(200);
-    await clearTextField(adbClient, deviceId, 10);
+    await clearTextField(adbClient, deviceId, 5);
     await adbClient.shell(deviceId, `input text ${y}`);
-    await setTimeout(600);
+    await setTimeout(700);
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.INPUT_OK_BUTTON}`);
     await setTimeout(UI_DELAY);
 
