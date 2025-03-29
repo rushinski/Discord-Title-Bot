@@ -3,12 +3,19 @@ const adb = require('adbkit');
 const LastVisitedModel = require('../models/LastVisited');
 
 const ELEMENT_POSITIONS = {
-  COORDINATES_SEARCH_BUTTON: "659 27",
-  KINGDOM_ID_INPUT: "668 215",
-  INPUT_OK_BUTTON: "1839 1029",
-  X_COORDINATE_INPUT: "948 215",
-  Y_COORDINATE_INPUT: "1181 215",
-  COORDINATES_OVERLAY_SEARCH_BUTTON: "1332 215",
+  COORDINATES_SEARCH_BUTTON: "440 23",
+  KINGDOM_ID_INPUT: "558 177",
+  INPUT_OK_BUTTON: "1517 848",
+  X_COORDINATE_INPUT: "800 182",
+  Y_COORDINATE_INPUT: "998 186",
+  COORDINATES_OVERLAY_SEARCH_BUTTON: "1110 182",
+  GOVERNOR_CITY_HALL: '795 470',
+  TITLE_WINDOW: '860 275',
+  JUSTICE: '368 492',
+  DUKE: '654 492',
+  ARCHITECT: '939 491',
+  SCIENTIST: '1224 492',
+  CONFIRM_TITLE: '807 801',
 };
 
 const UI_DELAY = 750;
@@ -84,8 +91,6 @@ async function addTitle({ adbClient, logger, kingdom, x, y, title, deviceId }) {
     logger.info(`Applying delay of ${delay}ms.`);
     await setTimeout(delay);
 
-    logger.info('Completed title assignment tasks successfully.');
-
     // Update the globally last visited kingdom
     await LastVisitedModel.updateOne(
       {},
@@ -93,6 +98,46 @@ async function addTitle({ adbClient, logger, kingdom, x, y, title, deviceId }) {
       { upsert: true }
     );
     logger.info(`Updated global last visited kingdom to: ${kingdom}`);
+
+    // Click on governor
+    logger.info('Clicking on governor.');
+    await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.GOVERNOR_CITY_HALL}`);
+    await setTimeout(UI_DELAY);
+
+    // Open title window
+    logger.info('Opening title window.');
+    await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.TITLE_WINDOW}`);
+    await setTimeout(UI_DELAY);
+
+    // Checking which title to click and then clicking it
+    if (title == 'justice') {
+      logger.info('Clicking Justice title.')
+      await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.JUSTICE}`);
+      await setTimeout(UI_DELAY);
+    } else if (title == 'duke') {
+        logger.info('Clicking Duke title.')
+        await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.DUKE}`);
+        await setTimeout(UI_DELAY);
+    } else if (title == 'architect') {
+        logger.info('Clicking Architect title.')
+        await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.ARCHITECT}`);
+        await setTimeout(UI_DELAY);
+    } else if (title == 'scientist') {
+        logger.info('Clicking Architect title.')
+        await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.ARCHITECT}`);
+        await setTimeout(UI_DELAY);
+    } else {
+        logger.info('Title check box click unsuccesfull')
+    }
+
+    // Clicking confirm title button
+    logger.info('Clicking title confirmation button.');
+    await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.CONFIRM_TITLE}`);
+    await setTimeout(UI_DELAY);
+
+
+    logger.info('Completed title assignment tasks successfully.');
+
   } catch (error) {
     logger.error(`Error in addTitle function: ${error.message}`);
     throw error;

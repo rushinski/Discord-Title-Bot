@@ -50,7 +50,7 @@ module.exports = {
 
       console.log('Screenshot captured:', screenshotPath);
 
-      const cropRegion = { left: 47, top: 938, width: 86, height: 88 };
+      const cropRegion = { left: 41, top: 789, width: 73, height: 59 };
       try {
         await sharp(screenshotPath).extract(cropRegion).toFile(croppedImagePath);
         console.log('Cropped image saved at:', croppedImagePath);
@@ -110,7 +110,7 @@ module.exports = {
 
       async function handleEvent(event) {
         if (event === 'event1') {
-          exec('adb shell input tap 92 980', async (adbError) => {
+          exec('adb shell input tap 77 819', async (adbError) => {
             if (adbError) {
               console.error('Error during ADB click:', adbError);
               return interaction.followUp({
@@ -123,7 +123,7 @@ module.exports = {
             setTimeout(captureFullScreenshot, 1100);
           });
         } else if (event === 'event2') {
-          exec('adb shell input tap 92 980', (adbError1) => {
+          exec('adb shell input tap 77 819', (adbError1) => {
             if (adbError1) {
               console.error('Error during first click of event2:', adbError1);
               return interaction.followUp({
@@ -134,7 +134,7 @@ module.exports = {
 
             console.log('First click of event2 completed.');
             setTimeout(() => {
-              exec('adb shell input tap 92 980', (adbError2) => {
+              exec('adb shell input tap 77 819', (adbError2) => {
                 if (adbError2) {
                   console.error('Error during second click of event2:', adbError2);
                   return interaction.followUp({
