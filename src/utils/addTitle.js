@@ -44,8 +44,9 @@ async function addTitle({ adbClient, logger, kingdom, x, y, title, deviceId }) {
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.KINGDOM_ID_INPUT}`);
     await setTimeout(200); // Allow the input field to be focused
     await clearTextField(adbClient, deviceId, 10); // Clear existing text
+    await setTimeout(1000); // Wait for text entry to complete
     await adbClient.shell(deviceId, `input text ${kingdom}`);
-    await setTimeout(700); // Wait for text entry to complete
+    await setTimeout(1000); // Wait for text entry to complete
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.INPUT_OK_BUTTON}`);
     await setTimeout(UI_DELAY);
 
@@ -54,8 +55,9 @@ async function addTitle({ adbClient, logger, kingdom, x, y, title, deviceId }) {
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.X_COORDINATE_INPUT}`);
     await setTimeout(200);
     await clearTextField(adbClient, deviceId, 5);
+    await setTimeout(1000); // Wait for text entry to complete
     await adbClient.shell(deviceId, `input text ${x}`);
-    await setTimeout(700);
+    await setTimeout(1000);
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.INPUT_OK_BUTTON}`);
     await setTimeout(UI_DELAY);
 
@@ -64,8 +66,9 @@ async function addTitle({ adbClient, logger, kingdom, x, y, title, deviceId }) {
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.Y_COORDINATE_INPUT}`);
     await setTimeout(200);
     await clearTextField(adbClient, deviceId, 5);
+    await setTimeout(1000); // Wait for text entry to complete
     await adbClient.shell(deviceId, `input text ${y}`);
-    await setTimeout(700);
+    await setTimeout(1000);
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.INPUT_OK_BUTTON}`);
     await setTimeout(UI_DELAY);
 
@@ -107,7 +110,7 @@ async function addTitle({ adbClient, logger, kingdom, x, y, title, deviceId }) {
     // Open title window
     logger.info('Opening title window.');
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.TITLE_WINDOW}`);
-    await setTimeout(UI_DELAY);
+    await setTimeout(1000);
 
     // Checking which title to click and then clicking it
     if (title == 'justice') {

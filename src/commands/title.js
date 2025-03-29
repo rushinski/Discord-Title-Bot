@@ -13,6 +13,9 @@ const pendingTitleRequests = {
 const activeTitles = new Map(); // Track active title locks
 const isProcessing = { duke: false, justice: false, architect: false, scientist: false };
 
+const mainActionQueue = [];
+let isBotProcessing = false;
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('title')
@@ -136,11 +139,38 @@ async function queueTitleAssignment(params) {
       return interaction.editReply(`⏳ **${title.toUpperCase()}** is currently assigned. You've been added to the queue.`);
   }
 
-  // If a title assignment is already in progress, do nothing
-  if (isProcessing[title]) return;
+  // Add to main action queue
+  mainActionQueue.push(params);
+  logger.info(`Added ${title} request to MAIN queue. Main queue length: ${mainActionQueue.length}`);
 
-  // Start processing the queue for this specific title
-  processQueue(title);
+  // Start processing the main queue if not already running
+  if (!isBotProcessing) {
+      processMainQueue();
+  }
+}
+
+async function processMainQueue() {
+  if (mainActionQueue.length === 0) {
+    console.log("Main queue is empty. Stopping processing.");
+    isBotProcessing = false;
+    return;
+  }
+
+  isBotProcessing = true;
+  const request = mainActionQueue.shift(); // Get next request from the main queue
+
+  console.log(`Processing request for ${request.title}. Queue length: ${mainActionQueue.length}`);
+
+  try {
+    await assignTitle(request); // 🛑 This was missing! This actually executes the title assignment.
+  } catch (error) {
+    console.error(`Error processing request:`, error);
+  }
+
+  // After processing, check for the next request
+  setTimeout(() => {
+    processMainQueue();
+  }, 500); // Short delay before processing the next request
 }
 
 async function processQueue(title) {
@@ -149,8 +179,11 @@ async function processQueue(title) {
       return;
   }
 
+  // Ensure only ONE title is being assigned at a time
+  if (isBotProcessing) return; 
+
   isProcessing[title] = true;
-  const request = pendingTitleRequests[title].shift(); // Get next request
+  const request = pendingTitleRequests[title].shift();
 
   try {
       await assignTitle(request);
@@ -158,37 +191,47 @@ async function processQueue(title) {
       console.error(`Error processing ${title} request:`, error);
   }
 
-  // Process next request in queue
-  processQueue(title);
+  // Once finished, allow the next request in the MAIN queue to proceed
+  isProcessing[title] = false;
+  processMainQueue(); 
 }
+
 
 async function assignTitle(params) {
   const { title, interaction, logger } = params;
 
-  // Check if the title is locked
+  console.log(`Attempting to assign title: ${title}`);
+
   if (activeTitles.has(title)) {
-      logger.info(`${title} is currently assigned. Adding request to queue.`);
-      return;
+    console.log(`${title} is already assigned. Request queued.`);
+    return;
   }
 
   // Lock the title for 90 seconds
-  activeTitles.set(title, Date.now() + 90000); // 90 sec lock
-  logger.info(`Title ${title} assigned and locked for 90 seconds.`);
+  activeTitles.set(title, Date.now() + 90000);
+  console.log(`Title ${title} assigned and locked for 90 seconds.`);
 
-  // Notify the user their request is being processed
   await interaction.editReply(`✅ Assigning **${title.toUpperCase()}**...`);
 
-  // Run the ADB command to assign the title
-  await addTitle(params);
+  try {
+    console.log(`Calling addTitle() for ${title}...`);
+    await addTitle(params); // ✅ Ensure this executes!
+  } catch (error) {
+    console.error(`Error in addTitle for ${title}:`, error);
+  }
 
-  // Notify user that the title was assigned
   await interaction.editReply(`🎉 **${title.toUpperCase()}** assigned! It will be locked for **90 seconds**.`);
 
   // Unlock title after 90 seconds
   setTimeout(() => {
-      activeTitles.delete(title);
-      console.log(`Title ${title} is now available.`);
-      processQueue(title); // Check queue for pending requests
+    activeTitles.delete(title);
+    console.log(`Title ${title} is now available.`);
+
+    // Process next request in the queue
+    if (pendingTitleRequests[title].length > 0) {
+      processQueue(title);
+    } else {
+      processMainQueue(); // Continue processing main queue
+    }
   }, 90000);
 }
-
