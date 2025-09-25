@@ -1,15 +1,29 @@
+/**
+ * Utility: addTitle
+ *
+ * Purpose:
+ * - Automates assigning a title in Rise of Kingdoms via ADB commands.
+ * - Navigates through UI fields, enters kingdom/coordinates, and applies the title.
+ * - Updates MongoDB with the last visited kingdom.
+ * - Performs image recognition (via checkPopUpSide.js) to validate success.
+ *
+ * Security & Reliability:
+ * - Relies on ADB input, which must be secured to prevent unauthorized control.
+ * - All major steps wrapped in error handling with clear logging.
+ */
+
 const { setTimeout } = require('timers/promises');
-const adb = require('adbkit');
 const LastVisitedModel = require('../models/LastVisited');
 const { matchScreenshotRegion } = require('./checkPopUpSide.js');
 
+// UI element positions (ADB tap coordinates)
 const ELEMENT_POSITIONS = {
-  COORDINATES_SEARCH_BUTTON: "440 23",
-  KINGDOM_ID_INPUT: "558 177",
-  INPUT_OK_BUTTON: "1517 848",
-  X_COORDINATE_INPUT: "800 182",
-  Y_COORDINATE_INPUT: "998 186",
-  COORDINATES_OVERLAY_SEARCH_BUTTON: "1110 182",
+  COORDINATES_SEARCH_BUTTON: '440 23',
+  KINGDOM_ID_INPUT: '558 177',
+  INPUT_OK_BUTTON: '1517 848',
+  X_COORDINATE_INPUT: '800 182',
+  Y_COORDINATE_INPUT: '998 186',
+  COORDINATES_OVERLAY_SEARCH_BUTTON: '1110 182',
   GOVERNOR_CITY_HALL: '795 470',
   TITLE_WINDOW: '860 275',
   JUSTICE: '368 492',
@@ -22,133 +36,81 @@ const ELEMENT_POSITIONS = {
 const UI_DELAY = 750;
 
 /**
- * Add a title to a player in the specified kingdom and coordinates.
+ * Assign a title to a player in-game.
+ *
  * @param {object} params - Parameters for title assignment.
+ * @param {object} params.adbClient - Initialized ADB client.
+ * @param {object} params.logger - Logger (console).
+ * @param {string} params.kingdom - Target kingdom ID.
+ * @param {number} params.x - X coordinate.
+ * @param {number} params.y - Y coordinate.
+ * @param {string} params.title - Title to assign (justice, duke, architect, scientist).
+ * @param {string} params.deviceId - ADB device identifier.
  */
 async function addTitle({ adbClient, logger, kingdom, x, y, title, deviceId }) {
   if (!adbClient) {
-    throw new Error('ADB Client is undefined. Ensure it\'s initialized and passed to addTitle.');
+    throw new Error("ADB Client is undefined. Ensure it's initialized before calling addTitle.");
   }
 
   try {
-    logger.info("Starting title assignment...");
-    logger.info(`Using coordinates: x=${x}, y=${y}`);
-    logger.info(`Assigning title: ${title}`);
+    logger.info(`🎯 Starting title assignment for "${title}" at (${x}, ${y}) in kingdom ${kingdom}`);
 
-    // Open coordinates search overlay
-    logger.info("Clicking coordinates search button.");
+    // --- Step 1: Open coordinates search overlay ---
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.COORDINATES_SEARCH_BUTTON}`);
     await setTimeout(UI_DELAY);
 
-    // Enter kingdom ID
-    logger.info("Entering kingdom ID.");
+    // --- Step 2: Enter kingdom ID ---
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.KINGDOM_ID_INPUT}`);
-    await setTimeout(200); // Allow the input field to be focused
-    await clearTextField(adbClient, deviceId, 10); // Clear existing text
-    await setTimeout(1000); // Wait for text entry to complete
+    await setTimeout(200);
+    await clearTextField(adbClient, deviceId, 10);
+    await setTimeout(1000);
     await adbClient.shell(deviceId, `input text ${kingdom}`);
-    await setTimeout(1000); // Wait for text entry to complete
-    await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.INPUT_OK_BUTTON}`);
-    await setTimeout(UI_DELAY);
-
-    // Enter X coordinate
-    logger.info(`Entering X coordinate: ${x}`);
-    await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.X_COORDINATE_INPUT}`);
-    await setTimeout(200);
-    await clearTextField(adbClient, deviceId, 5);
-    await setTimeout(1000); // Wait for text entry to complete
-    await adbClient.shell(deviceId, `input text ${x}`);
     await setTimeout(1000);
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.INPUT_OK_BUTTON}`);
     await setTimeout(UI_DELAY);
 
-    // Enter Y coordinate
-    logger.info(`Entering Y coordinate: ${y}`);
-    await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.Y_COORDINATE_INPUT}`);
-    await setTimeout(200);
-    await clearTextField(adbClient, deviceId, 5);
-    await setTimeout(1000); // Wait for text entry to complete
-    await adbClient.shell(deviceId, `input text ${y}`);
-    await setTimeout(1000);
-    await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.INPUT_OK_BUTTON}`);
-    await setTimeout(UI_DELAY);
+    // --- Step 3: Enter coordinates (X & Y) ---
+    await enterCoordinate(adbClient, deviceId, ELEMENT_POSITIONS.X_COORDINATE_INPUT, x, logger, 'X');
+    await enterCoordinate(adbClient, deviceId, ELEMENT_POSITIONS.Y_COORDINATE_INPUT, y, logger, 'Y');
 
-    // Click the search button
-    logger.info("Clicking coordinates overlay search button.");
+    // --- Step 4: Execute search ---
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.COORDINATES_OVERLAY_SEARCH_BUTTON}`);
     await setTimeout(UI_DELAY);
 
-    // Fetch the last visited kingdom globally
+    // --- Step 5: Delay logic based on kingdom change ---
     const lastVisitedDoc = await LastVisitedModel.findOne({});
     const lastKingdom = lastVisitedDoc?.kingdom || null;
+    const delay = lastKingdom === kingdom ? 2000 : 5000;
 
-    // Calculate delay based on the last visited kingdom
-    let delay;
-    if (lastKingdom === kingdom) {
-      delay = 2000; // Shorter delay if revisiting the same kingdom
-    } else {
-      delay = 5000; // Longer delay if switching kingdoms
-    }
-
-    logger.info(`Last visited kingdom: ${lastKingdom || 'none'}`);
-    logger.info(`Currently visiting kingdom: ${kingdom || 'none'}`);
-    logger.info(`Applying delay of ${delay}ms.`);
+    logger.info(`Last visited: ${lastKingdom || 'none'} | Current: ${kingdom} | Delay: ${delay}ms`);
     await setTimeout(delay);
 
-    // Update the globally last visited kingdom
-    await LastVisitedModel.updateOne(
-      {},
-      { $set: { kingdom, updatedAt: new Date() } },
-      { upsert: true }
-    );
-    logger.info(`Updated global last visited kingdom to: ${kingdom}`);
+    // Update DB with new last visited kingdom
+    await LastVisitedModel.updateOne({}, { $set: { kingdom, updatedAt: new Date() } }, { upsert: true });
 
-    // Click on governor
-    logger.info('Clicking on governor.');
+    // --- Step 6: Open governor menu ---
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.GOVERNOR_CITY_HALL}`);
     await setTimeout(UI_DELAY);
 
-    const cropRegion = { left: 158, top: 159, width: 42, height: 30 };
-    const referenceImageName = 'rok_goldenCrown.png';
-    
+    // Optional image validation step
     try {
-        const isMatch = await matchScreenshotRegion(adbClient, deviceId, cropRegion, referenceImageName);
-        console.log('🎯 Final Result:', isMatch ? '✅ MATCHED' : '❌ NOT MATCHED');
+      const cropRegion = { left: 158, top: 159, width: 42, height: 30 };
+      const isMatch = await matchScreenshotRegion(adbClient, deviceId, cropRegion, 'rok_goldenCrown.png');
+      logger.info(`Crown validation result: ${isMatch ? '✅ MATCH' : '❌ NO MATCH'}`);
     } catch (error) {
-        console.error('🚨 Error:', error);
-    }    
-
-    // Checking which title to click and then clicking it
-    if (title == 'justice') {
-      logger.info('Clicking Justice title.')
-      await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.JUSTICE}`);
-      await setTimeout(UI_DELAY);
-    } else if (title == 'duke') {
-        logger.info('Clicking Duke title.')
-        await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.DUKE}`);
-        await setTimeout(UI_DELAY);
-    } else if (title == 'architect') {
-        logger.info('Clicking Architect title.')
-        await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.ARCHITECT}`);
-        await setTimeout(UI_DELAY);
-    } else if (title == 'scientist') {
-        logger.info('Clicking Architect title.')
-        await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.ARCHITECT}`);
-        await setTimeout(UI_DELAY);
-    } else {
-        logger.info('Title check box click unsuccesfull')
+      logger.warn(`⚠️ Validation skipped: ${error.message}`);
     }
 
-    // Clicking confirm title button
-    logger.info('Clicking title confirmation button.');
+    // --- Step 7: Assign title ---
+    await tapTitle(adbClient, deviceId, title, logger);
+
+    // --- Step 8: Confirm ---
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.CONFIRM_TITLE}`);
     await setTimeout(UI_DELAY);
 
-
-    logger.info('Completed title assignment tasks successfully.');
-
+    logger.info(`🎉 Title assignment complete for "${title}".`);
   } catch (error) {
-    logger.error(`Error in addTitle function: ${error.message}`);
+    logger.error(`❌ Error in addTitle: ${error.message}`);
     throw error;
   }
 }
@@ -157,13 +119,50 @@ module.exports = { addTitle };
 
 /**
  * Clears a text field by simulating backspace presses.
- * @param {object} adbClient - The ADB client instance.
- * @param {string} deviceId - Target device ID.
- * @param {number} length - Number of backspace presses.
  */
 async function clearTextField(adbClient, deviceId, length = 20) {
   for (let i = 0; i < length; i++) {
-    await adbClient.shell(deviceId, 'input keyevent 67'); // KEYCODE_DEL for backspace
-    await setTimeout(50); // Small delay between key presses
+    await adbClient.shell(deviceId, 'input keyevent 67'); // KEYCODE_DEL
+    await setTimeout(50);
   }
+}
+
+/**
+ * Helper: enter a coordinate (X or Y).
+ */
+async function enterCoordinate(adbClient, deviceId, inputPos, value, logger, label) {
+  logger.info(`Entering ${label} coordinate: ${value}`);
+  await adbClient.shell(deviceId, `input tap ${inputPos}`);
+  await setTimeout(200);
+  await clearTextField(adbClient, deviceId, 5);
+  await setTimeout(1000);
+  await adbClient.shell(deviceId, `input text ${value}`);
+  await setTimeout(1000);
+  await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.INPUT_OK_BUTTON}`);
+  await setTimeout(UI_DELAY);
+}
+
+/**
+ * Helper: tap the correct title position.
+ */
+async function tapTitle(adbClient, deviceId, title, logger) {
+  switch (title) {
+    case 'justice':
+      await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.JUSTICE}`);
+      break;
+    case 'duke':
+      await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.DUKE}`);
+      break;
+    case 'architect':
+      await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.ARCHITECT}`);
+      break;
+    case 'scientist':
+      await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.SCIENTIST}`);
+      break;
+    default:
+      logger.warn(`⚠️ Unknown title: ${title}`);
+      return;
+  }
+  await setTimeout(UI_DELAY);
+  logger.info(`✅ Clicked on ${title} title.`);
 }
