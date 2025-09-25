@@ -8,7 +8,7 @@ const { PNG } = require('pngjs');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-const BOT_IMAGES_DIR = path.join(__dirname, '../images/botImages/locateBotImages');
+const BOT_IMAGES_DIR = path.join(__dirname, '../images/botImages');
 const REFERENCE_IMAGES_DIR = path.join(__dirname, '../images/referenceImages');
 
 const LastVisited = require('../models/LastVisited'); // Assuming the model is in the `models` directory

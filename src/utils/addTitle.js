@@ -1,6 +1,7 @@
 const { setTimeout } = require('timers/promises');
 const adb = require('adbkit');
 const LastVisitedModel = require('../models/LastVisited');
+const { matchScreenshotRegion } = require('./checkPopUpSide.js');
 
 const ELEMENT_POSITIONS = {
   COORDINATES_SEARCH_BUTTON: "440 23",
@@ -107,10 +108,15 @@ async function addTitle({ adbClient, logger, kingdom, x, y, title, deviceId }) {
     await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.GOVERNOR_CITY_HALL}`);
     await setTimeout(UI_DELAY);
 
-    // Open title window
-    logger.info('Opening title window.');
-    await adbClient.shell(deviceId, `input tap ${ELEMENT_POSITIONS.TITLE_WINDOW}`);
-    await setTimeout(1000);
+    const cropRegion = { left: 158, top: 159, width: 42, height: 30 };
+    const referenceImageName = 'rok_goldenCrown.png';
+    
+    try {
+        const isMatch = await matchScreenshotRegion(adbClient, deviceId, cropRegion, referenceImageName);
+        console.log('🎯 Final Result:', isMatch ? '✅ MATCHED' : '❌ NOT MATCHED');
+    } catch (error) {
+        console.error('🚨 Error:', error);
+    }    
 
     // Checking which title to click and then clicking it
     if (title == 'justice') {
