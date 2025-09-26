@@ -15,11 +15,22 @@ A **Discord bot** built for **Rise of Kingdoms (RoK)** title management. The bot
 
 ---
 
+## 🎥 Demo
+
+See the bot in action:
+
+- [![Set Location Demo](./docs/assets/set-location.gif)](https://youtu.be/qWGF4W2bfXI)
+- [![Assign Title Demo](./docs/assets/assign-title.gif)](https://youtu.be/NFrKKCJ1rGU)
+
+---
+
 ## 📊 Impact
 
-⚡ **Automates title rotations** → Reduces manual overhead in RoK leadership.
-📌 **Reliable queue system** → Ensures fair title distribution with cooldowns.
-🔐 **Stronger guild coordination** → Supports structured role management during wars/events.
+⚡ **Automates title rotations** → Reduces manual overhead in RoK leadership.  
+📌 **Reliable queue system** → Ensures fair title distribution with cooldowns.  
+🔐 **Stronger guild coordination** → Supports structured role management during wars/events.  
+💰 **Cost savings for the kingdom** → Eliminates the need to pay for external title bot services.  
+🚀 **Career impact** → Led to two paid offers for building similar automation solutions.
 
 ---
 
