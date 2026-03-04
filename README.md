@@ -1,21 +1,21 @@
-# Discord Title Bot 🤖
+# Discord Title Bot
 
 A **Discord bot** built for **Rise of Kingdoms (RoK)** title management. The bot automates **title assignment**, **location tracking**, and **bot navigation** using **Discord commands, MongoDB persistence, and ADB integration** with an emulator/device.
 
 ---
 
-## ✨ Features
+## Features
 
-- 🎯 **Title Assignment System** → Handles Duke, Scientist, Architect, and Justice titles with cooldowns + queueing.
-- 📍 **Location Tracking** → Users save in-game coordinates (`/set-location`) for quick targeting.
-- 🔎 **Bot Locator** → Admins run `/locate-bot` to detect bot’s current position using OCR + reference images.
-- 🗄️ **Database Persistence** → MongoDB stores user locations and last visited kingdoms.
-- 📷 **ADB + OCR Integration** → Captures screenshots, processes images with Sharp + Tesseract.js.
-- 🔒 **Permissions Enforcement** → Admin-only commands for sensitive bot controls.
+- **Title Assignment System** → Handles Duke, Scientist, Architect, and Justice titles with cooldowns + queueing.
+- **Location Tracking** → Users save in-game coordinates (`/set-location`) for quick targeting.
+- **Bot Locator** → Admins run `/locate-bot` to detect bot’s current position using OCR + reference images.
+- **Database Persistence** → MongoDB stores user locations and last visited kingdoms.
+- **ADB + OCR Integration** → Captures screenshots, processes images with Sharp + Tesseract.js.
+- **Permissions Enforcement** → Admin-only commands for sensitive bot controls.
 
 ---
 
-## 🎥 Demo
+## Demo
 
 See the bot in action:
 
@@ -24,17 +24,17 @@ See the bot in action:
 
 ---
 
-## 📊 Impact
+## Impact
 
-⚡ **Automates title rotations** → Reduces manual overhead in RoK leadership.  
-📌 **Reliable queue system** → Ensures fair title distribution with cooldowns.  
-🔐 **Stronger guild coordination** → Supports structured role management during wars/events.  
-💰 **Cost savings for the kingdom** → Eliminates the need to pay for external title bot services.  
-🚀 **Career impact** → Led to two paid offers for building similar automation solutions.
+**Automates title rotations** → Reduces manual overhead in RoK leadership.  
+**Reliable queue system** → Ensures fair title distribution with cooldowns.  
+**Stronger guild coordination** → Supports structured role management during wars/events.  
+**Cost savings for the kingdom** → Eliminates the need to pay for external title bot services.  
+**Career impact** → Led to two paid offers for building similar automation solutions.
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 **Core**
 - Node.js + Discord.js (command + event system)
@@ -50,7 +50,7 @@ See the bot in action:
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 ```text
 discord-title-bot/
@@ -83,12 +83,10 @@ discord-title-bot/
 
 ---
 
-## 📖 Additional Documentation
+## Additional Documentation
 
 - [ARCHITECTURE.md](./docs/ARCHITECTURE.md) → Event-driven design, command queueing, ADB flow
 - [INTEGRATIONS.md](./docs/INTEGRATIONS.md) → Discord.js, MongoDB, ADB, OCR
 - [SECURITY.md](./docs/SECURITY.md) → Permissions, token handling, ADB security
 
-📄 License
-MIT — Open for educational and reference use.
-
+---
