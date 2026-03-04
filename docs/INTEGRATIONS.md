@@ -1,12 +1,12 @@
 # Discord Title Bot - Integrations Overview
 
-## 🎯 Purpose
+## Purpose
 
 The Discord Title Bot integrates with several **third-party libraries and services** to provide automation, persistence, and image-based detection for title management in **Rise of Kingdoms (RoK)**.
 
 ---
 
-## 🔑 Discord.js (Command + Event System)
+## Discord.js (Command + Event System)
 
 - **Purpose:** Provide slash command interface and event-driven interactions
 - **Integration:**
@@ -21,7 +21,7 @@ The Discord Title Bot integrates with several **third-party libraries and servic
 
 ---
 
-## 🔑 MongoDB + Mongoose (Database)
+## MongoDB + Mongoose (Database)
 
 - **Purpose:** Store player locations and bot state
 - **Integration:**
@@ -36,7 +36,7 @@ The Discord Title Bot integrates with several **third-party libraries and servic
 
 ---
 
-## 🔑 ADBKit (Device Control)
+## ADBKit (Device Control)
 
 - **Purpose:** Automate taps, inputs, and screenshots on emulator/device
 - **Integration:**
@@ -51,7 +51,7 @@ The Discord Title Bot integrates with several **third-party libraries and servic
 
 ---
 
-## 🔑 Tesseract.js (OCR Engine)
+## Tesseract.js (OCR Engine)
 
 - **Purpose:** Extract coordinates and text from in-game screenshots
 - **Integration:**
@@ -65,7 +65,7 @@ The Discord Title Bot integrates with several **third-party libraries and servic
 
 ---
 
-## 🔑 Sharp + Pixelmatch + PNG.js (Image Processing)
+## Sharp + Pixelmatch + PNG.js (Image Processing)
 
 - **Purpose:** Detect in-game UI elements via reference matching
 - **Integration:**
@@ -80,7 +80,7 @@ The Discord Title Bot integrates with several **third-party libraries and servic
 
 ---
 
-## 📋 Integration Data Flow
+## Integration Data Flow
 
 ```mermaid
 flowchart TD
@@ -98,9 +98,11 @@ Commands --> DiscordUser
 
 ---
 
-## ⚡ Integration Strengths
+## Integration Strengths
 
 - Real-world automation using **ADB + OCR**
 - **Resilient persistence** via MongoDB
 - Modular separation of **command, event, and utility layers**
 - Strong Discord integration with permissions + ephemeral replies
+
+---
