@@ -1,6 +1,6 @@
 # Discord Title Bot - System Architecture
 
-## 🎯 Purpose
+## Purpose
 
 The Discord Title Bot was built to **automate title management and location tracking** for leadership teams in **Rise of Kingdoms (RoK)**. It enables:
 
@@ -12,33 +12,33 @@ The Discord Title Bot was built to **automate title management and location trac
 
 ---
 
-## 🛠 Core Architecture Overview
+## Core Architecture Overview
 
 The system is designed as a **modular Node.js application** integrating Discord, MongoDB, ADB (Android Debug Bridge), and OCR libraries.
 
-### 🔹 Discord Layer (discord.js)
+### Discord Layer (discord.js)
 - Slash command interface (`/title`, `/set-location`, `/locate-bot`)
 - Event-driven system (`interactionCreate` event dispatcher)
 - Permissions enforcement (Admin-only commands)
 
-### 🔹 Database Layer (MongoDB + Mongoose)
+### Database Layer (MongoDB + Mongoose)
 - `Location` model → Stores player accounts, tiers, and coordinates
 - `LastVisited` model → Tracks the last kingdom visited (singleton document)
 - Persistence of data across sessions and devices
 
-### 🔹 Device Layer (ADBKit)
+### Device Layer (ADBKit)
 - Communicates with an emulator or Android device
 - Executes taps, text inputs, and screenshots via ADB
 - Used for navigating the RoK UI and performing title assignments
 
-### 🔹 Image Processing & OCR
+### Image Processing & OCR
 - **Sharp** → Image cropping and processing
 - **Pixelmatch + PNG.js** → Image comparison for reference UI elements
 - **Tesseract.js** → OCR engine to extract in-game coordinates from screenshots
 
 ---
 
-## 🔗 System Data Flow
+## System Data Flow
 
 ```mermaid
 flowchart TD
@@ -57,7 +57,7 @@ C -->|Respond| A
 
 ---
 
-## 🧩 Subsystem Breakdown
+## Subsystem Breakdown
 
 | Subsystem       | Implementation             | Purpose |
 |-----------------|---------------------------|---------|
@@ -70,10 +70,12 @@ C -->|Respond| A
 
 ---
 
-## ⚡ Architecture Strengths
+## Architecture Strengths
 
 - **Automation of repetitive tasks** → Title assignment and location handling without manual effort
 - **Resilient queueing system** → Prevents overlapping title assignments with cooldowns
 - **Hybrid integration** → Bridges Discord, databases, and Android emulation in one pipeline
 - **Scalable design** → Modular separation of commands, events, utils, and models
 - **Security-first approach** → Admin-only execution, secrets handled via `.env`
+
+---
