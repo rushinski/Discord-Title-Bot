@@ -1,13 +1,13 @@
 # Discord Title Bot - Security Notes
 
-## 🎯 Purpose
+## Purpose
 
 This document outlines the **security considerations** for the Discord Title Bot.  
 As a system handling **Discord authentication, player data, and device automation**, security was a key part of the design.
 
 ---
 
-## 🔑 Core Risks
+## Core Risks
 
 ### 1. Environment Variables & Secrets
 - **Collected:** Discord bot token, MongoDB URI, Bot ID, Kingdom IDs.
@@ -69,7 +69,7 @@ As a system handling **Discord authentication, player data, and device automatio
 
 ---
 
-## 📋 Security-by-Design Principles
+## Security-by-Design Principles
 
 1. **Least Privilege** → Only admins can invoke high-impact commands.
 2. **Zero Secrets in Repo** → All secrets externalized via `.env`.
@@ -79,7 +79,7 @@ As a system handling **Discord authentication, player data, and device automatio
 
 ---
 
-## ⚡ Gaps & Future Improvements
+## Gaps & Future Improvements
 
 - No automated intrusion detection or structured audit logs.
 - No role-based access beyond Discord admin checks.
@@ -88,7 +88,7 @@ As a system handling **Discord authentication, player data, and device automatio
 
 ---
 
-## ✅ Recruiter-Facing Takeaway
+## Recruiter-Facing Takeaway
 
 The Discord Title Bot demonstrates **security-aware design** for a gaming automation project:
 
@@ -98,3 +98,5 @@ The Discord Title Bot demonstrates **security-aware design** for a gaming automa
 - ADB + OCR actions tightly scoped and error-handled.  
 
 While not enterprise-grade, the bot was built with **practical security controls** suitable for portfolio demonstration.
+
+---
